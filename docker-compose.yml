@@ -1,0 +1,32 @@
+version: '3'
+services:
+  redis:
+    image: redis:3.2.11
+    ports:
+      - "6379:6379"
+  app:
+    depends_on:
+      - redis
+    volumes:
+      - ./app:/app
+    build:
+      context: ./app
+      dockerfile: ./Dockerfile
+    command: python app.py
+    environment:
+      BROKER_URL: 'redis://redis:6379/1'
+      SAFELY_SLACKBOT_TOKEN: ${SAFELY_SLACKBOT_TOKEN}
+  worker:
+    depends_on:
+      - redis
+    volumes:
+      - ./worker:/worker
+    build:
+      context: ./worker
+      dockerfile: ./Dockerfile
+    environment:
+      BROKER_URL: 'redis://redis:6379/1'
+      SAFELY_SLACKBOT_TOKEN: ${SAFELY_SLACKBOT_TOKEN}
+      SAFELY_REACT_TO_CLEAN: 'true'
+      SAFELY_ADMINS_LIST: ${SAFELY_ADMINS_LIST}
+    command: celery -A src.task worker --loglevel=DEBUG -Q safely
