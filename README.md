@@ -34,13 +34,17 @@ same capability in addition to:
  - Daily/Weekly digests. 
 
 
-### Deploy with Compose.
+### Initial Setup.
 If you prefer to run this yourself using Docker Compose, follow the following steps:
 
 - Create a Slack App and Bot app in Slack.
 - export your Slack token as `SAFELY_SLACKBOT_TOKEN`.
 - export your list of Slack admins as `SAFELY_ADMINS_LIST` separated by a comma. 
 - Invite your Slack bot to all the channels you would like to monitor.
+
+
+### Deploy with Docker Compose
+
 - Create a new cloud compute instance with at least 4GB RAM and 4 vCPUs.
 - Clone this repo. 
 - Install Docker and Docker Compose.
