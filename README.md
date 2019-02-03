@@ -73,7 +73,18 @@ See `docker-compose.yml` for supported env vars to store in the .env file.
 
 ### Deploy with Kubernetes
 
-Coming soon ..
+The `k8s.yaml` manifest will provision:
+- A `safely-listener` Deployment
+- A `safely-moderator` Deployment
+- A `safely-redis` Deployment
+  - An instance of redis used for communication by the various celery components
+- A `safely-redis` Service so that the redis instance can be accessed by hostname
+- A `safely-config` Configmap
+- A `safely-slackbot-token` Secret
+
+Assuming you have the slackbot token already saved in a file, you can deploy with the command below, by specifying the path to your token file.
+
+`sed "s/SLACKBOT_TOKEN_PLACEHOLDER/$(cat PATH/TO/FILE/WITH/TOKEN)/" k8s.yaml | kubectl apply  -f -`
     
     
 ## Disclaimer
