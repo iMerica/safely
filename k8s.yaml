@@ -1,0 +1,113 @@
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: safely-redis
+spec:
+  selector:
+    app: safely-redis
+  ports:
+  - protocol: TCP
+    port: 6379
+
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: safely-redis
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: safely-redis
+    spec:
+      containers:
+      - image: redis:3.2.11
+        name: redis
+        resources: {}
+      restartPolicy: Always
+
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: safely-listener
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: safely-listener
+    spec:
+      containers:
+      - image: imichael/safely-listener:latest
+        name: safely-listener
+        resources: {}
+        envFrom:
+        - secretRef:
+            name: safely-slackbot-token
+        - configMapRef:
+            name: safely-config
+        command:
+        - python
+        args:
+        - app.py
+        workingDir: /app
+      restartPolicy: Always
+
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: safely-moderator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: safely-moderator
+    spec:
+      containers:
+      - image: imichael/safely-moderator:latest
+        name: safely-moderator
+        resources: {}
+        envFrom:
+        - secretRef:
+            name: safely-slackbot-token
+        - configMapRef:
+            name: safely-config
+        command:
+        - bash
+        args:
+        - -c
+        - |
+         exec celery -A src.task worker --loglevel=${SAFELY_LOG_LEVEL} -Q safely
+        workingDir: /worker
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: safely-config
+data:
+  BROKER_URL: redis://safely-redis:6379/1
+  SAFELY_REACT_TO_CLEAN: 'true'
+  SAFELY_ADMINS_LIST: ''
+  SAFELY_LOG_LEVEL: DEBUG
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: safely-slackbot-token
+type: Opaque
+stringData:
+  SAFELY_SLACKBOT_TOKEN: SLACKBOT_TOKEN_PLACEHOLDER
